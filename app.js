@@ -35,18 +35,22 @@ const btnBackPoster = document.getElementById('btn-back-poster');
 const toastEl = document.getElementById('toast');
 
 /* ==========================================================================
-   Procedural Gothic Web Audio Engine (Zero External Dependencies)
+   Vampiric Carti Chant Audio Engine + Spin Riser & Drop Impact
    ========================================================================== */
 
 class GothicAudio {
   constructor() {
     this.ctx = null;
     this.enabled = false;
+    this.userMuted = false;
     this.masterGain = null;
-    this.droneOsc1 = null;
-    this.droneOsc2 = null;
     this.riserOsc = null;
     this.riserGain = null;
+
+    this.bgm = new Audio('assets/svinchik-vamp-chant.mp3');
+    this.bgm.loop = true;
+    this.bgm.preload = 'auto';
+    this.bgm.volume = 0.85;
   }
 
   init() {
@@ -59,38 +63,14 @@ class GothicAudio {
     this.masterGain.gain.value = 0.0;
     this.masterGain.connect(this.ctx.destination);
 
-    // Dark gothic sub-bass + minor-second cathedral drone
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 240;
-    filter.connect(this.masterGain);
-
-    this.droneOsc1 = this.ctx.createOscillator();
-    this.droneOsc1.type = 'sawtooth';
-    this.droneOsc1.frequency.value = 46.25; // F#1 dark root
-    const d1Gain = this.ctx.createGain();
-    d1Gain.gain.value = 0.22;
-    this.droneOsc1.connect(d1Gain);
-    d1Gain.connect(filter);
-    this.droneOsc1.start();
-
-    this.droneOsc2 = this.ctx.createOscillator();
-    this.droneOsc2.type = 'triangle';
-    this.droneOsc2.frequency.value = 69.3; // C#2 fifth
-    const d2Gain = this.ctx.createGain();
-    d2Gain.gain.value = 0.14;
-    this.droneOsc2.connect(d2Gain);
-    d2Gain.connect(filter);
-    this.droneOsc2.start();
-
-    // Spin riser synth
+    // Spin riser synth layered subtly over the vamp organ intro
     this.riserOsc = this.ctx.createOscillator();
     this.riserOsc.type = 'sawtooth';
     this.riserOsc.frequency.value = 55;
     const riserFilter = this.ctx.createBiquadFilter();
     riserFilter.type = 'bandpass';
-    riserFilter.frequency.value = 320;
-    riserFilter.Q.value = 3.0;
+    riserFilter.frequency.value = 340;
+    riserFilter.Q.value = 2.6;
     this.riserGain = this.ctx.createGain();
     this.riserGain.gain.value = 0.0;
 
@@ -100,24 +80,64 @@ class GothicAudio {
     this.riserOsc.start();
   }
 
-  toggle() {
+  async enable(resetTrack = false) {
     this.init();
-    if (!this.ctx) return false;
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      try {
+        await this.ctx.resume();
+      } catch {
+        // Ignore resume errors before user gesture
+      }
     }
-    this.enabled = !this.enabled;
-    const now = this.ctx.currentTime;
-    this.masterGain.gain.cancelScheduledValues(now);
-    this.masterGain.gain.setTargetAtTime(this.enabled ? 0.45 : 0.0, now, 0.15);
-    return this.enabled;
+    if (resetTrack) {
+      this.bgm.currentTime = 0;
+    }
+    try {
+      await this.bgm.play();
+      this.enabled = true;
+      this.userMuted = false;
+      if (this.ctx && this.masterGain) {
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setTargetAtTime(0.32, now, 0.12);
+      }
+      return true;
+    } catch {
+      this.enabled = false;
+      return false;
+    }
+  }
+
+  disable() {
+    this.enabled = false;
+    this.userMuted = true;
+    this.bgm.pause();
+    if (this.ctx && this.masterGain) {
+      const now = this.ctx.currentTime;
+      this.masterGain.gain.cancelScheduledValues(now);
+      this.masterGain.gain.setTargetAtTime(0.0, now, 0.1);
+    }
+  }
+
+  async toggle() {
+    if (this.enabled) {
+      this.disable();
+      return false;
+    }
+    return await this.enable(false);
+  }
+
+  syncToRitualStart() {
+    if (!this.enabled) return;
+    this.bgm.currentTime = 0;
+    this.bgm.play().catch(() => {});
   }
 
   updateSpin(progress) {
     if (!this.ctx || !this.enabled || !this.riserOsc) return;
     const now = this.ctx.currentTime;
-    const freq = 55 + Math.pow(progress, 2.2) * 340;
-    const gain = Math.min(0.28, progress * 0.28);
+    const freq = 55 + Math.pow(progress, 2.2) * 320;
+    const gain = Math.min(0.22, progress * 0.22);
     this.riserOsc.frequency.setTargetAtTime(freq, now, 0.06);
     this.riserGain.gain.setTargetAtTime(gain, now, 0.06);
   }
@@ -131,43 +151,19 @@ class GothicAudio {
     if (!this.ctx || !this.enabled) return;
     const now = this.ctx.currentTime;
 
-    // Deep sub-bass drop
+    // Deep sub-bass drop layered on transformation
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(140, now);
-    osc.frequency.exponentialRampToValueAtTime(28, now + 0.9);
-    gain.gain.setValueAtTime(0.85, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.15);
+    osc.frequency.exponentialRampToValueAtTime(28, now + 0.85);
+    gain.gain.setValueAtTime(0.75, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.05);
 
     osc.connect(gain);
     gain.connect(this.masterGain);
     osc.start(now);
-    osc.stop(now + 1.2);
-
-    // Metallic dark noise burst
-    const bufferSize = this.ctx.sampleRate * 0.45;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
-    }
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1400, now);
-    filter.frequency.exponentialRampToValueAtTime(160, now + 0.45);
-
-    const nGain = this.ctx.createGain();
-    nGain.gain.setValueAtTime(0.4, now);
-    nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-
-    noise.connect(filter);
-    filter.connect(nGain);
-    nGain.connect(this.masterGain);
-    noise.start(now);
+    osc.stop(now + 1.1);
   }
 }
 
@@ -494,7 +490,7 @@ function updateLoaderUI() {
 
 let appState = 'loading';
 let spinElapsed = 0;
-const SPIN_DURATION = 5.2; // seconds until transformation climax
+const SPIN_DURATION = 6.15; // Synced to 4-bar 148 BPM vamp organ intro -> 808 drop hits on poster reveal!
 let isBoosting = false;
 let currentOmega = 0.7;
 let transformElapsed = 0;
@@ -536,6 +532,14 @@ function startRitual() {
 
   eclipseFlash.classList.remove('active');
   setAppState('spinning');
+
+  if (audio.enabled) {
+    audio.syncToRitualStart();
+  } else if (!audio.userMuted) {
+    audio.enable(true).then((ok) => {
+      if (ok) btnSound.setAttribute('aria-pressed', 'true');
+    });
+  }
 }
 
 function triggerTransformation() {
@@ -760,10 +764,24 @@ window.addEventListener('pointerup', () => setBoost(false));
 window.addEventListener('pointercancel', () => setBoost(false));
 
 // Sound toggle
-btnSound.addEventListener('click', () => {
-  const isOn = audio.toggle();
+btnSound.addEventListener('click', async (e) => {
+  e.stopPropagation();
+  const isOn = await audio.toggle();
   btnSound.setAttribute('aria-pressed', isOn ? 'true' : 'false');
 });
+
+// Auto-unlock vampiric chant on first user tap/click anywhere (browser autoplay policy)
+function tryAutoUnlockAudio(e) {
+  if (e.target && e.target.closest('#btn-sound')) return;
+  if (audio.enabled || audio.userMuted) return;
+  audio.enable(appState === 'spinning' && spinElapsed < 1.2).then((ok) => {
+    if (ok) {
+      btnSound.setAttribute('aria-pressed', 'true');
+    }
+  });
+}
+window.addEventListener('pointerdown', tryAutoUnlockAudio, { passive: true });
+window.addEventListener('keydown', tryAutoUnlockAudio, { passive: true });
 
 // Skip intro
 btnSkip.addEventListener('click', () => {
