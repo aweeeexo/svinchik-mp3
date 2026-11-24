@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>svinchik.mp3 — SOON | НА ВСЕХ ПЛОЩАДКАХ</title>
+  <meta name="description" content="svinchik.mp3 — скоро на всех площадках. Интерактивный готический 3D-тизер." />
+  <meta name="theme-color" content="#050406" />
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="svinchik.mp3 — SOON" />
+  <meta property="og:description" content="Скоро на всех площадках." />
+  <meta property="og:image" content="assets/poster.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+
+  <!-- Google Fonts: Gothic Blackletter + Clean Editorial Sans + Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body class="state-loading">
+  <!-- Background Atmospheric Layers -->
+  <div class="bg-void" aria-hidden="true"></div>
+  <div class="bg-cathedral" aria-hidden="true">
+    <svg viewBox="0 0 1440 600" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Distant Gothic Cathedral Spires Silhouette -->
+      <path d="M0 600 L0 470 L60 470 L75 390 L90 470 L140 470 L165 310 L190 470 L240 470 L240 420 L270 250 L285 180 L300 250 L330 420 L330 460 L410 460 L430 340 L450 460 L530 460 L560 290 L585 120 L595 45 L605 120 L630 290 L660 460 L720 460 L720 380 L760 220 L780 140 L800 220 L840 380 L840 460 L900 460 L930 290 L955 120 L965 45 L975 120 L1000 290 L1030 460 L1110 460 L1130 340 L1150 460 L1210 460 L1210 420 L1240 250 L1255 180 L1270 250 L1300 420 L1300 470 L1360 470 L1385 310 L1410 470 L1440 470 L1440 600 Z" fill="#090509"/>
+      <path d="M585 120 L595 45 L605 120 M955 120 L965 45 L975 120 M760 220 L780 140 L800 220" stroke="#4a0712" stroke-width="1.5" opacity="0.55"/>
+    </svg>
+  </div>
+  <div class="bg-crimson-mist" aria-hidden="true"></div>
+  <div class="bg-vignette" aria-hidden="true"></div>
+  <div class="bg-grain" aria-hidden="true"></div>
+
+  <!-- 3D WebGL Canvas (Three.js Piggy Stage) -->
+  <canvas id="webgl-canvas" aria-label="3D модель свинчика"></canvas>
+
+  <!-- 2D FX Canvas (Embers, Shockwave Rings, Eclipse Shards) -->
+  <canvas id="fx-canvas" aria-hidden="true"></canvas>
+
+  <!-- Transformation Flash & Eclipse Overlay -->
+  <div id="eclipse-flash" class="eclipse-flash" aria-hidden="true">
+    <div class="eclipse-ring"></div>
+    <div class="eclipse-core"></div>
+  </div>
+
+  <!-- Floating Gothic Top Navigation -->
+  <header class="top-bar">
+    <div class="brand-mark">
+      <span class="cross-glyph" aria-hidden="true">†</span>
+      <span class="brand-name">svinchik.mp3</span>
+    </div>
+
+    <div class="top-actions">
+      <button id="btn-sound" class="icon-pill" type="button" aria-pressed="false" title="Включить готический звук">
+        <svg class="icon-svg icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+          <line x1="22" y1="9" x2="16" y2="15"/>
+          <line x1="16" y1="9" x2="22" y2="15"/>
+        </svg>
+        <svg class="icon-svg icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+        <span class="pill-label">Звук</span>
+      </button>
+
+      <button id="btn-skip" class="icon-pill skip-pill" type="button" title="Перейти сразу к постеру">
+        <span class="pill-label">Пропустить</span>
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ACT I: Gothic Preloader -->
+  <section id="loader-screen" class="loader-screen" aria-live="polite">
+    <div class="loader-sigil" aria-hidden="true">
+      <svg viewBox="0 0 120 120" class="sigil-svg">
+        <circle cx="60" cy="60" r="54" class="sigil-ring-outer" />
+        <circle cx="60" cy="60" r="42" class="sigil-ring-inner" />
+        <path d="M60 16 L65 48 L96 54 L65 60 L60 104 L55 60 L24 54 L55 48 Z" class="sigil-cross" />
+      </svg>
+    </div>
+    <h1 class="loader-title">svinchik.mp3</h1>
+    <div class="loader-progress-wrap">
+      <div class="loader-bar-track">
+        <div id="loader-bar" class="loader-bar-fill"></div>
+      </div>
+      <div class="loader-meta">
+        <span id="loader-status">ПРОБУЖДЕНИЕ МОДЕЛИ</span>
+        <span id="loader-percent">0%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACT II: Spin-Up Ritual HUD -->
+  <section id="ritual-hud" class="ritual-hud" aria-hidden="true">
+    <div class="ritual-telemetry">
+      <div class="telemetry-row">
+        <span class="telemetry-label">ОБРЯД ПРИЗЫВА</span>
+        <span id="rpm-readout" class="telemetry-value">000 RPM</span>
+      </div>
+      <div class="ritual-meter-track">
+        <div id="ritual-meter-fill" class="ritual-meter-fill"></div>
+      </div>
+      <p id="ritual-hint" class="ritual-hint">Удерживай экран, чтобы ускорить вращение</p>
+    </div>
+  </section>
+
+  <!-- ACT IV: Poster Reveal Main Stage -->
+  <main id="poster-stage" class="poster-stage" aria-hidden="true">
+    <div class="poster-layout">
+      <!-- Interactive 3D Tilt Poster Frame -->
+      <div class="poster-pedestal">
+        <div id="poster-card" class="poster-card" tabindex="0" aria-label="Постер svinchik.mp3">
+          <div class="poster-aura" aria-hidden="true"></div>
+          <div class="poster-frame">
+            <!-- Ornate Gothic Corner Filigree -->
+            <span class="corner corner-tl" aria-hidden="true"></span>
+            <span class="corner corner-tr" aria-hidden="true"></span>
+            <span class="corner corner-bl" aria-hidden="true"></span>
+            <span class="corner corner-br" aria-hidden="true"></span>
+
+            <img
+              src="assets/poster.jpg"
+              alt="Постер релиза svinchik.mp3 — SOON НА ВСЕХ ПЛОЩАДКАХ"
+              class="poster-img"
+              draggable="false"
+            />
+            <div class="poster-sheen" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gothic Release Info & Controls -->
+      <div class="release-panel">
+        <div class="status-badge">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>SOON · НА ВСЕХ ПЛОЩАДКАХ</span>
+        </div>
+
+        <h2 class="release-title">svinchik.mp3</h2>
+
+        <p class="release-copy">
+          Тёмная эстетика, тяжёлый звук и готический стиль.
+          Релиз совсем скоро появится на всех стриминговых площадках.
+        </p>
+
+        <!-- Primary Action Buttons -->
+        <div class="action-group">
+          <button id="btn-replay" class="btn-gothic btn-crimson" type="button">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            <span>Повторить обряд</span>
+          </button>
+
+          <button id="btn-inspect" class="btn-gothic btn-obsidian" type="button">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            <span>Осмотреть 3D</span>
+          </button>
+
+          <button id="btn-share" class="btn-gothic btn-ghost" type="button">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            <span>Поделиться</span>
+          </button>
+        </div>
+
+        <!-- Streaming Platforms Coming Soon Strip -->
+        <div class="platforms-block">
+          <span class="platforms-label">СКОРО НА ПЛОЩАДКАХ</span>
+          <ul class="platforms-list" aria-label="Стриминговые площадки">
+            <li class="platform-chip">Spotify</li>
+            <li class="platform-chip">Apple Music</li>
+            <li class="platform-chip">Яндекс Музыка</li>
+            <li class="platform-chip">VK Музыка</li>
+            <li class="platform-chip">SoundCloud</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 3D Inspect Mode HUD -->
+  <aside id="inspect-hud" class="inspect-hud" aria-hidden="true">
+    <div class="inspect-bar">
+      <span class="inspect-hint">Вращай мышью или пальцем · Колёсико для зума</span>
+      <button id="btn-back-poster" class="btn-gothic btn-crimson btn-compact" type="button">
+        <span>Вернуться к постеру</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Inline Toast Notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
